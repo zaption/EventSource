@@ -27,7 +27,8 @@ static NSString *const ESEventRetryKey = @"retry";
     BOOL wasClosed;
 }
 
-@property (nonatomic, strong) NSURL *eventURL;
+@property (nonatomic, strong) NSMutableURLRequest *request;
+
 @property (nonatomic, strong) NSURLConnection *eventSource;
 @property (nonatomic, strong) NSMutableDictionary *listeners;
 @property (nonatomic, assign) NSTimeInterval timeoutInterval;
@@ -50,6 +51,11 @@ static NSString *const ESEventRetryKey = @"retry";
     return [[EventSource alloc] initWithURL:URL timeoutInterval:timeoutInterval];
 }
 
++ (instancetype)eventSourceWithRequest:(NSURLRequest *)request timeoutInterval:(NSTimeInterval)timeoutInterval
+{
+    return [[EventSource alloc] initWithRequest:request timeoutInterval:timeoutInterval];
+}
+
 - (id)initWithURL:(NSURL *)URL
 {
     return [self initWithURL:URL timeoutInterval:ES_DEFAULT_TIMEOUT];
@@ -57,13 +63,19 @@ static NSString *const ESEventRetryKey = @"retry";
 
 - (id)initWithURL:(NSURL *)URL timeoutInterval:(NSTimeInterval)timeoutInterval
 {
+    NSURLRequest *request = [NSURLRequest requestWithURL: URL];
+    return [self initWithRequest:request timeoutInterval:timeoutInterval];
+}
+
+- (id)initWithRequest:(NSURLRequest *)request timeoutInterval:(NSTimeInterval)timeoutInterval
+{
     self = [super init];
     if (self) {
         _listeners = [NSMutableDictionary dictionary];
-        _eventURL = URL;
+        _request = [request mutableCopy];
         _timeoutInterval = timeoutInterval;
         _retryInterval = ES_RETRY_INTERVAL;
-        
+
         dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_retryInterval * NSEC_PER_SEC));
         dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
             [self open];
@@ -99,11 +111,12 @@ static NSString *const ESEventRetryKey = @"retry";
 - (void)open
 {
     wasClosed = NO;
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:self.eventURL cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:self.timeoutInterval];
+    [self.request setCachePolicy:NSURLRequestReloadIgnoringCacheData];
+    [self.request setTimeoutInterval:self.timeoutInterval];
     if (self.lastEventID) {
-        [request setValue:self.lastEventID forHTTPHeaderField:@"Last-Event-ID"];
+        [self.request setValue:self.lastEventID forHTTPHeaderField:@"Last-Event-ID"];
     }
-    self.eventSource = [[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:YES];
+    self.eventSource = [[NSURLConnection alloc] initWithRequest:self.request delegate:self startImmediately:YES];
 }
 
 - (void)close
