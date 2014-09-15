@@ -53,6 +53,11 @@ typedef void (^EventSourceEventHandler)(Event *event);
 /// @param URL The URL of the EventSource.
 + (instancetype)eventSourceWithURL:(NSURL *)URL timeoutInterval:(NSTimeInterval)timeoutInterval;
 
+/// Returns a new instance of EventSource with the specified URL request.
+///
+/// @param request A request for the EventSource target URL.
++ (instancetype)eventSourceWithRequest:(NSURLRequest *)request timeoutInterval:(NSTimeInterval)timeoutInterval;
+
 /// Creates a new instance of EventSource with the specified URL.
 ///
 /// @param URL The URL of the EventSource.
@@ -63,6 +68,12 @@ typedef void (^EventSourceEventHandler)(Event *event);
 /// @param URL The URL of the EventSource.
 /// @param timeoutInterval The request timeout interval in seconds. See <tt>NSURLRequest</tt> for more details. Default: 5 minutes.
 - (instancetype)initWithURL:(NSURL *)URL timeoutInterval:(NSTimeInterval)timeoutInterval;
+
+/// Creates a new instance of EventSource with the specified URL request.
+///
+/// @param request A request for the EventSource target URL.
+/// @param timeoutInterval The request timeout interval in seconds. See <tt>NSURLRequest</tt> for more details. Default: 5 minutes.
+- (id)initWithRequest:(NSURLRequest *)request timeoutInterval:(NSTimeInterval)timeoutInterval;
 
 /// Registers an event handler for the Message event.
 ///
